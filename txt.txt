@@ -1,1 +1,147 @@
+import sys
 
+import qtpy
+from PyQt6.QtCore import *
+from PyQt6.QtWidgets import *
+from PyQt6.QtGui import *
+
+
+class Autorization(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Никитенко - Патрушенко")
+        self.setFixedSize(1920, 1080)
+
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+
+        main_layout = QVBoxLayout(central_widget)
+        main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.label = QLabel("Авторизация")
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        font = QFont()
+        font.setPointSize(15)
+        self.label.setFont(font)
+        main_layout.addWidget(self.label)
+
+        self.autorization1 = QLineEdit("управляющий")
+        self.autorization2 = QLineEdit("09112001")
+        self.autorization2.setFixedSize(350, 22)
+        self.autorization1.setFixedSize(350, 22)
+        self.autorization2.setEchoMode(QLineEdit.EchoMode.Password)
+        self.autorization1.setPlaceholderText("Логин")
+        self.autorization2.setPlaceholderText("Пароль")
+        main_layout.addWidget(self.autorization1)
+        main_layout.addWidget(self.autorization2)
+
+        self.button_auth = QPushButton("Войти")
+        self.button_auth.clicked.connect(self.check_credentials)
+        main_layout.addWidget(self.button_auth)
+
+    def check_credentials(self):
+        username = self.autorization1.text()
+        password = self.autorization2.text()
+
+        if username == "управляющий" and password == "09112001":
+            self.open_main_window()
+        else:
+            QMessageBox.warning(self, "Ошибка", "Неверный логин, или пароль!")
+
+    def open_main_window(self):
+        self.main_window = MainWindow()
+        self.main_window.show()
+        self.close()
+
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Speed i need this, my mom is KINDA HOMLESS")
+        self.setFixedSize(1920, 1080)
+
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+
+        main_layout = QHBoxLayout(central_widget)
+        main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        menu_bar = self.menuBar()
+
+        manager_menu = menu_bar.addMenu("Manager")
+        shift_report = manager_menu.addAction("Shift report")
+        exit_action = manager_menu.addAction("Exit")
+        exit_action = exit_action.triggered.connect(self.open_autorization_window)
+
+        tools_menu = menu_bar.addMenu("Tools")
+        settings_menu = tools_menu.addAction("Settings")
+        settings_menu = settings_menu.triggered.connect(self.open_settings_window)
+
+        help_menu = menu_bar.addMenu("Help")
+        user_guide_menu = help_menu.addAction("User Guide")
+        about_menu = help_menu.addAction("About")
+        support_menu = help_menu.addAction("Support")
+
+        menu_bar.addSeparator()
+
+    def open_autorization_window(self):
+        self.autorization = Autorization()
+        self.autorization.show()
+        self.close()
+
+    def open_settings_window(self):
+        self.settings = Settings()
+        self.settings.show()
+        self.close()
+
+
+class Settings(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Speed i need this, my mom is KINDA HOMLESS")
+        self.setFixedSize(1920, 1080)
+
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+
+        main_layout = QHBoxLayout(central_widget)
+        main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        menu_bar = self.menuBar()
+
+        manager_menu = menu_bar.addMenu("Manager")
+        shift_report = manager_menu.addAction("Shift report")
+        exit_action = manager_menu.addAction("Exit")
+        exit_action = exit_action.triggered.connect(self.open_autorization_window)
+
+        tools_menu = menu_bar.addMenu("Tools")
+        settings_menu = tools_menu.addAction("Back")
+        settings_menu = settings_menu.triggered.connect(self.open_settings_window)
+
+        help_menu = menu_bar.addMenu("Help")
+        user_guide_menu = help_menu.addAction("User Guide")
+        about_menu = help_menu.addAction("About")
+        support_menu = help_menu.addAction("Support")
+
+        menu_bar.addSeparator()
+
+    def open_autorization_window(self):
+        self.autorization = Autorization()
+        self.autorization.show()
+        self.close()
+
+    def open_settings_window(self):
+        self.settings = Settings()
+        self.settings.show()
+        self.close()
+
+
+app = QApplication(sys.argv)
+
+app.setStyle('Fusion')
+
+window = Autorization()
+window.show()
+window.showMaximized()
+
+app.exec()
