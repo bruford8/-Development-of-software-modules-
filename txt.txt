@@ -1,6 +1,4 @@
 import sys
-
-import qtpy
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
@@ -9,8 +7,11 @@ from PyQt6.QtGui import *
 class Autorization(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Никитенко - Патрушенко")
+        self.setWindowTitle("ANK Software")
         self.setFixedSize(1920, 1080)
+        self.settings = QSettings("ANK Software")
+        saved_theme = self.settings.value("theme", "light")
+        self.apply_theme(saved_theme)
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -18,7 +19,7 @@ class Autorization(QMainWindow):
         main_layout = QVBoxLayout(central_widget)
         main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.label = QLabel("Авторизация")
+        self.label = QLabel("Autorization")
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         font = QFont()
         font.setPointSize(15)
@@ -30,12 +31,12 @@ class Autorization(QMainWindow):
         self.autorization2.setFixedSize(350, 22)
         self.autorization1.setFixedSize(350, 22)
         self.autorization2.setEchoMode(QLineEdit.EchoMode.Password)
-        self.autorization1.setPlaceholderText("Логин")
-        self.autorization2.setPlaceholderText("Пароль")
+        self.autorization1.setPlaceholderText("Login")
+        self.autorization2.setPlaceholderText("Password")
         main_layout.addWidget(self.autorization1)
         main_layout.addWidget(self.autorization2)
 
-        self.button_auth = QPushButton("Войти")
+        self.button_auth = QPushButton("Login")
         self.button_auth.clicked.connect(self.check_credentials)
         main_layout.addWidget(self.button_auth)
 
@@ -46,7 +47,167 @@ class Autorization(QMainWindow):
         if username == "управляющий" and password == "09112001":
             self.open_main_window()
         else:
-            QMessageBox.warning(self, "Ошибка", "Неверный логин, или пароль!")
+            QMessageBox.warning(self, "Error", "Wrong login, or password!")
+
+    def open_main_window(self):
+        self.main_window = MainWindow()
+        self.main_window.show()
+        self.close()
+
+    def apply_theme(self, theme):
+        if theme == "dark":
+            dark_palette = QPalette()
+            dark_palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
+            dark_palette.setColor(QPalette.ColorRole.WindowText, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.Base, QColor(25, 25, 25))
+            dark_palette.setColor(QPalette.ColorRole.AlternateBase, QColor(53, 53, 53))
+            dark_palette.setColor(QPalette.ColorRole.ToolTipBase, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.ToolTipText, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.Text, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.Button, QColor(53, 53, 53))
+            dark_palette.setColor(QPalette.ColorRole.ButtonText, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.BrightText, Qt.GlobalColor.red)
+            dark_palette.setColor(QPalette.ColorRole.Link, QColor(42, 130, 218))
+            dark_palette.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
+            dark_palette.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.black)
+            QApplication.instance().setPalette(dark_palette)
+        else:
+            QApplication.instance().setPalette(QApplication.style().standardPalette())
+
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("ANK Software")
+        self.setFixedSize(1920, 1080)
+        self.settings = QSettings("ANK Software")
+        saved_theme = self.settings.value("theme", "light")
+        self.change_theme(saved_theme)
+
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+
+        main_layout = QHBoxLayout(central_widget)
+        main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        menu_bar = self.menuBar()
+
+        manager_menu = menu_bar.addMenu("Manager")
+        shift_report = manager_menu.addAction("Shift report")
+        exit_action = manager_menu.addAction("Exit")
+        exit_action.triggered.connect(self.open_autorization_window)
+
+        tools_menu = menu_bar.addMenu("Tools")
+        settings_menu = tools_menu.addAction("Settings")
+        settings_menu.triggered.connect(self.open_settings_window)
+
+        help_menu = menu_bar.addMenu("Help")
+        user_guide_menu = help_menu.addAction("User Guide")
+        about_menu = help_menu.addAction("About")
+        support_menu = help_menu.addAction("Support")
+
+        menu_bar.addSeparator()
+
+    def open_autorization_window(self):
+        self.autorization = Autorization()
+        self.autorization.show()
+        self.close()
+
+    def open_settings_window(self):
+        self.settings = Settings()
+        self.settings.show()
+        self.close()
+
+    def change_theme(self, theme):
+        if theme == "dark":
+            dark_palette = QPalette()
+            dark_palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
+            dark_palette.setColor(QPalette.ColorRole.WindowText, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.Base, QColor(25, 25, 25))
+            dark_palette.setColor(QPalette.ColorRole.AlternateBase, QColor(53, 53, 53))
+            dark_palette.setColor(QPalette.ColorRole.ToolTipBase, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.ToolTipText, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.Text, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.Button, QColor(53, 53, 53))
+            dark_palette.setColor(QPalette.ColorRole.ButtonText, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.BrightText, Qt.GlobalColor.red)
+            dark_palette.setColor(QPalette.ColorRole.Link, QColor(42, 130, 218))
+            dark_palette.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
+            dark_palette.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.black)
+            QApplication.instance().setPalette(dark_palette)
+        else:
+            QApplication.instance().setPalette(QApplication.style().standardPalette())
+
+
+class Settings(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("ANK Software")
+        self.setFixedSize(1920, 1080)
+
+        self.settings = QSettings("ANK Software")
+        self.current_theme = self.settings.value("theme", "light")
+        self.change_theme(self.current_theme)
+
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+
+        main_layout = QVBoxLayout(central_widget)
+        main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        menu_bar = self.menuBar()
+        tools_menu = menu_bar.addMenu("Tools")
+        back_action = tools_menu.addAction("Back")
+        back_action.triggered.connect(self.open_main_window)
+
+        title_label = QLabel("Settings")
+        title_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        font = QFont()
+        font.setPointSize(18)
+        title_label.setFont(font)
+        main_layout.addWidget(title_label)
+
+        theme_group = QGroupBox()
+        theme_group.setFixedSize(175, 80)
+        theme_layout = QVBoxLayout()
+
+        self.light_theme_btn = QPushButton("Light theme")
+        self.dark_theme_btn = QPushButton("Dark theme")
+
+        self.light_theme_btn.clicked.connect(lambda: self.change_theme("light"))
+        self.dark_theme_btn.clicked.connect(lambda: self.change_theme("dark"))
+
+        theme_layout.addWidget(self.light_theme_btn)
+        self.light_theme_btn.setFixedSize(150, 20)
+        theme_layout.addWidget(self.dark_theme_btn)
+        self.dark_theme_btn.setFixedSize(150, 20)
+        theme_group.setLayout(theme_layout)
+
+        main_layout.addWidget(theme_group)
+
+    def change_theme(self, theme):
+        self.current_theme = theme
+        self.settings.setValue("theme", theme)
+
+        if theme == "dark":
+            dark_palette = QPalette()
+            dark_palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
+            dark_palette.setColor(QPalette.ColorRole.WindowText, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.Base, QColor(25, 25, 25))
+            dark_palette.setColor(QPalette.ColorRole.AlternateBase, QColor(53, 53, 53))
+            dark_palette.setColor(QPalette.ColorRole.ToolTipBase, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.ToolTipText, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.Text, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.Button, QColor(53, 53, 53))
+            dark_palette.setColor(QPalette.ColorRole.ButtonText, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.BrightText, Qt.GlobalColor.red)
+            dark_palette.setColor(QPalette.ColorRole.Link, QColor(42, 130, 218))
+            dark_palette.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
+            dark_palette.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.black)
+
+            QApplication.instance().setPalette(dark_palette)
+        else:
+            QApplication.instance().setPalette(QApplication.style().standardPalette())
 
     def open_main_window(self):
         self.main_window = MainWindow()
@@ -54,90 +215,7 @@ class Autorization(QMainWindow):
         self.close()
 
 
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("Speed i need this, my mom is KINDA HOMLESS")
-        self.setFixedSize(1920, 1080)
-
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-
-        main_layout = QHBoxLayout(central_widget)
-        main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-
-        menu_bar = self.menuBar()
-
-        manager_menu = menu_bar.addMenu("Manager")
-        shift_report = manager_menu.addAction("Shift report")
-        exit_action = manager_menu.addAction("Exit")
-        exit_action = exit_action.triggered.connect(self.open_autorization_window)
-
-        tools_menu = menu_bar.addMenu("Tools")
-        settings_menu = tools_menu.addAction("Settings")
-        settings_menu = settings_menu.triggered.connect(self.open_settings_window)
-
-        help_menu = menu_bar.addMenu("Help")
-        user_guide_menu = help_menu.addAction("User Guide")
-        about_menu = help_menu.addAction("About")
-        support_menu = help_menu.addAction("Support")
-
-        menu_bar.addSeparator()
-
-    def open_autorization_window(self):
-        self.autorization = Autorization()
-        self.autorization.show()
-        self.close()
-
-    def open_settings_window(self):
-        self.settings = Settings()
-        self.settings.show()
-        self.close()
-
-
-class Settings(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("Speed i need this, my mom is KINDA HOMLESS")
-        self.setFixedSize(1920, 1080)
-
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-
-        main_layout = QHBoxLayout(central_widget)
-        main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-
-        menu_bar = self.menuBar()
-
-        manager_menu = menu_bar.addMenu("Manager")
-        shift_report = manager_menu.addAction("Shift report")
-        exit_action = manager_menu.addAction("Exit")
-        exit_action = exit_action.triggered.connect(self.open_autorization_window)
-
-        tools_menu = menu_bar.addMenu("Tools")
-        settings_menu = tools_menu.addAction("Back")
-        settings_menu = settings_menu.triggered.connect(self.open_settings_window)
-
-        help_menu = menu_bar.addMenu("Help")
-        user_guide_menu = help_menu.addAction("User Guide")
-        about_menu = help_menu.addAction("About")
-        support_menu = help_menu.addAction("Support")
-
-        menu_bar.addSeparator()
-
-    def open_autorization_window(self):
-        self.autorization = Autorization()
-        self.autorization.show()
-        self.close()
-
-    def open_settings_window(self):
-        self.settings = Settings()
-        self.settings.show()
-        self.close()
-
-
 app = QApplication(sys.argv)
-
 app.setStyle('Fusion')
 
 window = Autorization()
