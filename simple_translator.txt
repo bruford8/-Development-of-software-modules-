@@ -1,0 +1,42 @@
+import os
+from PyQt6.QtCore import QObject, pyqtSignal
+
+
+class SimpleTranslator(QObject):
+    languageChanged = pyqtSignal()
+
+    def __init__(self):
+        super().__init__()
+        self.current_language = "en"
+        self.translations = {}
+        self.load_language("en")
+
+    def load_language(self, lang_code):
+        """Загружает переводы из TXT файла"""
+        self.translations.clear()
+        file_path = f"languages/{lang_code}.txt"
+
+        try:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                for line in file:
+                    line = line.strip()
+                    if not line or line.startswith('#'):
+                        continue
+                    if '=' in line:
+                        key, value = line.split('=', 1)
+                        key = key.strip()
+                        value = value.strip()
+                        self.translations[key] = value
+
+            self.current_language = lang_code
+            print(f"Язык изменен на: {lang_code}")
+            self.languageChanged.emit()
+            return True
+
+        except Exception as e:
+            print(f"Ошибка загрузки языка: {e}")
+            return False
+
+    def tr(self, key):
+        """Возвращает перевод по ключу"""
+        return self.translations.get(key, key)
