@@ -306,6 +306,11 @@ class ShiftReport(QMainWindow):
         main_layout = QVBoxLayout(central_widget)
         main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
+        menu_bar = self.menuBar()
+        tools_menu = menu_bar.addMenu("Tools")
+        back_action = tools_menu.addAction("Back")
+        back_action.triggered.connect(self.open_main_window)
+
         main_layout.addStretch(1)
 
         self.label = QLabel("Report")
