@@ -104,6 +104,7 @@ class MainWindow(QMainWindow):
         shift_report = manager_menu.addAction("Shift report")
         exit_action = manager_menu.addAction("Exit")
         exit_action.triggered.connect(self.open_autorization_window)
+        shift_report.triggered.connect(self.open_shift_report)
 
         tools_menu = menu_bar.addMenu("Tools")
         settings_menu = tools_menu.addAction("Settings")
@@ -157,14 +158,17 @@ class MainWindow(QMainWindow):
         self.settings_window.show_maximized()
         self.close()
 
+    def open_shift_report(self):
+        self.shift_report = ShiftReport()
+        self.shift_report.show_maximized()
+        self.close()
+
     def apply_theme(self, theme):
         Autorization.apply_theme_to_app(theme)
 
     def show_maximized(self):
         self.show()
         self.showMaximized()
-
-
 
 
 class Settings(QMainWindow):
@@ -285,6 +289,129 @@ class Settings(QMainWindow):
         self.showMaximized()
 
 
+class ShiftReport(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("ANK Software")
+
+        self.settings = QSettings("ANK Software")
+        self.current_theme = self.settings.value("theme", "light")
+        self.current_style = self.settings.value("style", "Windows")
+
+        self.apply_theme_and_style(self.current_theme, self.current_style)
+
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+
+        main_layout = QVBoxLayout(central_widget)
+        main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        main_layout.addStretch(1)
+
+        self.label = QLabel("Report")
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        font = QFont()
+        font.setPointSize(20)
+        self.label.setFont(font)
+        main_layout.addWidget(self.label)
+
+        self.money = QLineEdit()
+        self.money.setFixedSize(350, 35)
+        self.money.setPlaceholderText("Cash")
+        money_validator = QDoubleValidator(0.0, 999999.99, 2, self)
+        money_validator.setNotation(QDoubleValidator.Notation.StandardNotation)
+        self.money.setValidator(money_validator)
+        main_layout.addWidget(self.money)
+
+        self.terminal = QLineEdit()
+        self.terminal.setFixedSize(350, 35)
+        self.terminal.setPlaceholderText("Receipt")
+        terminal_validator = QDoubleValidator(0.0, 999999.99, 2, self)
+        terminal_validator.setNotation(QDoubleValidator.Notation.StandardNotation)
+        self.terminal.setValidator(terminal_validator)
+        main_layout.addWidget(self.terminal)
+
+        self.remains = QLineEdit()
+        self.remains.setFixedSize(350, 35)
+        self.remains.setPlaceholderText("Remains")
+
+        remains_validator = QDoubleValidator(0.0, 999999.99, 2, self)
+        self.remains.setValidator(remains_validator)
+        main_layout.addWidget(self.remains)
+
+        self.end_shift = QPushButton("End shift")
+        self.end_shift.clicked.connect(self.validate_and_open_main_window)
+        main_layout.addWidget(self.end_shift)
+
+        main_layout.addStretch(1)
+
+    def validate_and_open_main_window(self):
+        if not self.money.text().strip():
+            QMessageBox.warning(self, "Error", "The cash field cannot be empty!")
+            self.money.setFocus()
+            return
+
+        if not self.terminal.text().strip():
+            QMessageBox.warning(self, "Error", "The receipt field cannot be empty!")
+            self.terminal.setFocus()
+            return
+
+        try:
+            cash_value = float(self.money.text())
+            receipt_value = float(self.terminal.text())
+        except ValueError:
+            QMessageBox.warning(self, "Error", "Only numbers can be entered in the cash and receipt fields!")
+            return
+
+        self.open_main_window()
+
+    def open_main_window(self):
+        self.save_shift_data()
+
+        self.main_window = MainWindow()
+        self.main_window.show_maximized()
+        self.close()
+
+    def save_shift_data(self):
+        cash = self.money.text()
+        receipt = self.terminal.text()
+        remains = self.remains.text() if self.remains.text().strip() else "0"
+
+        print(f"Данные смены: Cash={cash}, Receipt={receipt}, Remains={remains}")
+
+        self.settings.setValue("last_cash", cash)
+        self.settings.setValue("last_receipt", receipt)
+        self.settings.setValue("last_remains", remains)
+
+    def show_maximized(self):
+        self.show()
+        self.showMaximized()
+
+    def apply_theme_and_style(self, theme, style):
+        app = QApplication.instance()
+
+        app.setStyle(style)
+
+        if theme == "dark":
+            dark_palette = QPalette()
+            dark_palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
+            dark_palette.setColor(QPalette.ColorRole.WindowText, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.Base, QColor(25, 25, 25))
+            dark_palette.setColor(QPalette.ColorRole.AlternateBase, QColor(53, 53, 53))
+            dark_palette.setColor(QPalette.ColorRole.ToolTipBase, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.ToolTipText, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.Text, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.Button, QColor(53, 53, 53))
+            dark_palette.setColor(QPalette.ColorRole.ButtonText, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.BrightText, Qt.GlobalColor.red)
+            dark_palette.setColor(QPalette.ColorRole.Link, QColor(42, 130, 218))
+            dark_palette.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
+            dark_palette.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.black)
+            app.setPalette(dark_palette)
+        else:
+            app.setPalette(app.style().standardPalette())
+
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
@@ -292,7 +419,7 @@ settings = QSettings("ANK Software")
 initial_style = settings.value("style", "Fusion")
 app.setStyle(initial_style)
 
-window = MainWindow()
+window = Autorization()
 window.show()
 window.showMaximized()
 
