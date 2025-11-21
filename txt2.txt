@@ -1,67 +1,67 @@
 import sys
-import os
-import shutil
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
 
 
-class SimpleTranslator(QObject):
-    languageChanged = pyqtSignal()
-
+class Autorization(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.current_language = "en"
-        self.translations = {}
-        self.load_language("en")
+        self.setWindowTitle("ANK Software")
+        self.settings = QSettings("ANK Software", "ThemeSettings")
+        saved_theme = self.settings.value("theme", "light")
+        self.apply_theme(saved_theme)
 
-    def load_language(self, lang_code):
-        """Загружает переводы из TXT файла"""
-        self.translations.clear()
-        file_path = f"languages/{lang_code}.txt"
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
 
-        print(f"Загружаем язык: {lang_code}")
+        main_layout = QVBoxLayout(central_widget)
+        main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        try:
-            with open(file_path, 'r', encoding='utf-8') as file:
-                for line in file:
-                    line = line.strip()
-                    if not line or line.startswith('#'):
-                        continue
-                    if '=' in line:
-                        key, value = line.split('=', 1)
-                        key = key.strip()
-                        value = value.strip()
-                        self.translations[key] = value
+        self.label = QLabel("Autorization")
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        font = QFont()
+        font.setPointSize(15)
+        self.label.setFont(font)
+        main_layout.addWidget(self.label)
 
-            self.current_language = lang_code
-            print(f"Язык успешно изменен на: {lang_code}")
-            self.languageChanged.emit()
-            return True
+        self.autorization1 = QLineEdit("управляющий")
+        self.autorization2 = QLineEdit("09112001")
+        self.autorization2.setFixedSize(350, 22)
+        self.autorization1.setFixedSize(350, 22)
+        self.autorization2.setEchoMode(QLineEdit.EchoMode.Password)
+        self.autorization1.setPlaceholderText("Login")
+        self.autorization2.setPlaceholderText("Password")
+        main_layout.addWidget(self.autorization1)
+        main_layout.addWidget(self.autorization2)
 
-        except Exception as e:
-            print(f"Ошибка загрузки языка: {e}")
-            return False
+        self.button_auth = QPushButton("Login")
+        self.button_auth.clicked.connect(self.check_credentials)
+        main_layout.addWidget(self.button_auth)
 
-    def tr(self, key):
-        """Возвращает перевод по ключу"""
-        return self.translations.get(key, key)
+    def check_credentials(self):
+        username = self.autorization1.text()
+        password = self.autorization2.text()
 
+        if username == "управляющий" and password == "09112001":
+            self.open_main_window()
+        else:
+            QMessageBox.warning(self, "Error", "Wrong login, or password!")
 
-class BaseWindow(QMainWindow):
-    """Базовый класс для всех окон с поддержкой перевода"""
+    def open_main_window(self):
+        self.main_window = MainWindow()
+        self.main_window.show_maximized()
+        self.close()
 
-    def __init__(self, translator):
-        super().__init__()
-        self.translator = translator
-        self.translator.languageChanged.connect(self.retranslate_ui)
-
-    def retranslate_ui(self):
-        """Должен быть переопределен в дочерних классах"""
-        pass
+    def show_maximized(self):
+        self.show()
+        self.showMaximized()
 
     def apply_theme(self, theme):
-        """Общая функция применения темы"""
+        self.apply_theme_to_app(theme)
+
+    @staticmethod
+    def apply_theme_to_app(theme):
         if theme == "dark":
             dark_palette = QPalette()
             dark_palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
@@ -82,11 +82,10 @@ class BaseWindow(QMainWindow):
             QApplication.instance().setPalette(QApplication.style().standardPalette())
 
 
-class Autorization(BaseWindow):
-    def __init__(self, translator):
-        super().__init__(translator)
-
-        self.setFixedSize(1920, 1080)
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("ANK Software")
         self.settings = QSettings("ANK Software")
         saved_theme = self.settings.value("theme", "light")
         self.apply_theme(saved_theme)
@@ -95,499 +94,333 @@ class Autorization(BaseWindow):
         self.setCentralWidget(central_widget)
 
         main_layout = QVBoxLayout(central_widget)
-        main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.label = QLabel()
-        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        font = QFont()
-        font.setPointSize(15)
-        self.label.setFont(font)
-        main_layout.addWidget(self.label)
-
-        self.autorization1 = QLineEdit("управляющий")
-        self.autorization2 = QLineEdit("09112001")
-        self.autorization2.setFixedSize(350, 22)
-        self.autorization1.setFixedSize(350, 22)
-        self.autorization2.setEchoMode(QLineEdit.EchoMode.Password)
-        main_layout.addWidget(self.autorization1)
-        main_layout.addWidget(self.autorization2)
-
-        self.button_auth = QPushButton()
-        self.button_auth.clicked.connect(self.check_credentials)
-        main_layout.addWidget(self.button_auth)
-
-        self.retranslate_ui()
-
-    def retranslate_ui(self):
-        tr = self.translator.tr
-        self.setWindowTitle(tr("app_title"))
-        self.label.setText(tr("autorization"))
-        self.autorization1.setPlaceholderText(tr("login"))
-        self.autorization2.setPlaceholderText(tr("password"))
-        self.button_auth.setText(tr("login_button"))
-
-    def check_credentials(self):
-        username = self.autorization1.text()
-        password = self.autorization2.text()
-
-        if username == "управляющий" and password == "09112001":
-            self.open_main_window()
-        else:
-            QMessageBox.warning(self,
-                                self.translator.tr("error"),
-                                self.translator.tr("wrong_credentials"))
-
-    def open_main_window(self):
-        self.main_window = MainWindow(self.translator)
-        self.main_window.show()
-        self.close()
-
-
-class MainWindow(BaseWindow):
-    def __init__(self, translator):
-        super().__init__(translator)
-
-        self.setFixedSize(1920, 1080)
-        self.settings = QSettings("ANK Software")
-        saved_theme = self.settings.value("theme", "light")
-        self.apply_theme(saved_theme)
-
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-
-        main_layout = QHBoxLayout(central_widget)
         main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        self.menu_bar = self.menuBar()
+        main_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
-        self.create_menus()
-        self.retranslate_ui()
+        menu_bar = self.menuBar()
 
-    def create_menus(self):
-        # Меню Manager
-        self.manager_menu = QMenu(self)
-        self.shift_report_action = QAction(self)
-        self.shift_report_action.triggered.connect(self.open_shift_report_window)
-        self.manager_menu.addAction(self.shift_report_action)
+        manager_menu = menu_bar.addMenu("Manager")
+        shift_report = manager_menu.addAction("Shift report")
+        exit_action = manager_menu.addAction("Exit")
+        exit_action.triggered.connect(self.open_autorization_window)
+        shift_report.triggered.connect(self.open_shift_report)
 
-        self.exit_action = QAction(self)
-        self.exit_action.triggered.connect(self.open_autorization_window)
-        self.manager_menu.addAction(self.exit_action)
+        tools_menu = menu_bar.addMenu("Tools")
+        settings_menu = tools_menu.addAction("Settings")
+        settings_menu.triggered.connect(self.open_settings_window)
 
-        # Меню Tools
-        self.tools_menu = QMenu(self)
-        self.settings_action = QAction(self)
-        self.settings_action.triggered.connect(self.open_settings_window)
-        self.tools_menu.addAction(self.settings_action)
+        help_menu = menu_bar.addMenu("Help")
+        user_guide_menu = help_menu.addAction("User Guide")
+        about_menu = help_menu.addAction("About")
+        support_menu = help_menu.addAction("Support")
 
-        # Меню Help
-        self.help_menu = QMenu(self)
-        self.user_guide_action = QAction(self)
-        self.about_action = QAction(self)
-        self.support_action = QAction(self)
-        self.help_menu.addAction(self.user_guide_action)
-        self.help_menu.addAction(self.about_action)
-        self.help_menu.addAction(self.support_action)
+        self.computers = QPushButton("Computers")
+        self.computers.setFixedSize(200, 40)
+        main_layout.addStretch()
+        main_layout.addWidget(self.computers)
 
-        # Добавляем меню в менюбар
-        self.menu_bar.addMenu(self.manager_menu)
-        self.menu_bar.addMenu(self.tools_menu)
-        self.menu_bar.addMenu(self.help_menu)
+        self.computers = QPushButton("Sales")
+        self.computers.setFixedSize(200, 40)
+        main_layout.addWidget(self.computers)
 
-    def retranslate_ui(self):
-        tr = self.translator.tr
-        self.setWindowTitle(tr("app_title"))
+        self.computers = QPushButton("Users")
+        self.computers.setFixedSize(200, 40)
+        main_layout.addWidget(self.computers)
 
-        # Обновляем меню
-        self.manager_menu.setTitle(tr("manager"))
-        self.shift_report_action.setText(tr("shift_report"))
-        self.exit_action.setText(tr("exit"))
+        self.computers = QPushButton("Manage")
+        self.computers.setFixedSize(200, 40)
+        main_layout.addWidget(self.computers)
 
-        self.tools_menu.setTitle(tr("tools"))
-        self.settings_action.setText(tr("settings"))
+        self.computers = QPushButton("Deployment")
+        self.computers.setFixedSize(200, 40)
+        main_layout.addWidget(self.computers)
 
-        self.help_menu.setTitle(tr("help"))
-        self.user_guide_action.setText(tr("user_guide"))
-        self.about_action.setText(tr("about"))
-        self.support_action.setText(tr("support"))
+        self.computers = QPushButton("Monitoring")
+        self.computers.setFixedSize(200, 40)
+        main_layout.addWidget(self.computers)
+
+        self.computers = QPushButton("Reports")
+        self.computers.setFixedSize(200, 40)
+        main_layout.addWidget(self.computers)
+
+        self.computers = QPushButton("Log")
+        self.computers.setFixedSize(200, 40)
+        main_layout.addWidget(self.computers)
 
     def open_autorization_window(self):
-        self.autorization = Autorization(self.translator)
-        self.autorization.show()
+        self.autorization = Autorization()
+        self.autorization.show_maximized()
         self.close()
 
     def open_settings_window(self):
-        self.settings_window = Settings(self.translator)
-        self.settings_window.show()
+        self.settings_window = Settings()
+        self.settings_window.show_maximized()
         self.close()
 
-    def open_shift_report_window(self):
-        self.shift_report = ShiftReportWindow(self.translator)
-        self.shift_report.show()
+    def open_shift_report(self):
+        self.shift_report = ShiftReport()
+        self.shift_report.show_maximized()
         self.close()
 
+    def apply_theme(self, theme):
+        Autorization.apply_theme_to_app(theme)
 
-class ShiftReportWindow(BaseWindow):
-    def __init__(self, translator):
-        super().__init__(translator)
-
-        self.setFixedSize(1920, 1080)
-        self.settings = QSettings("ANK Software")
-        saved_theme = self.settings.value("theme", "light")
-        self.apply_theme(saved_theme)
-
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-
-        # Основной layout с выравниванием по центру
-        main_layout = QVBoxLayout(central_widget)
-        main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        # Меню
-        self.menu_bar = self.menuBar()
-        self.manager_menu = QMenu(self)
-        self.back_action = QAction(self)
-        self.back_action.triggered.connect(self.open_main_window)
-        self.manager_menu.addAction(self.back_action)
-        self.menu_bar.addMenu(self.manager_menu)
-
-        # Заголовок
-        self.title_label = QLabel()
-        self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        font = QFont()
-        font.setPointSize(24)
-        font.setBold(True)
-        self.title_label.setFont(font)
-        main_layout.addWidget(self.title_label)
-
-        # Добавляем отступ
-        main_layout.addSpacing(50)
-
-        # Группа для полей ввода по центру
-        self.input_group = QGroupBox()
-        self.input_group.setFixedSize(500, 300)
-        input_layout = QVBoxLayout()
-        input_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        # Поле для наличных
-        cash_layout = QHBoxLayout()
-        self.cash_label = QLabel()
-        self.cash_label.setFixedWidth(120)
-        self.cash_label.setAlignment(Qt.AlignmentFlag.AlignRight)
-        self.cash_input = QLineEdit()
-        self.cash_input.setFixedSize(200, 30)
-        cash_layout.addWidget(self.cash_label)
-        cash_layout.addWidget(self.cash_input)
-        cash_layout.addStretch()
-        input_layout.addLayout(cash_layout)
-
-        # Добавляем отступ между полями
-        input_layout.addSpacing(20)
-
-        # Поле для карты
-        card_layout = QHBoxLayout()
-        self.card_label = QLabel()
-        self.card_label.setFixedWidth(120)
-        self.card_label.setAlignment(Qt.AlignmentFlag.AlignRight)
-        self.card_input = QLineEdit()
-        self.card_input.setFixedSize(200, 30)
-        card_layout.addWidget(self.card_label)
-        card_layout.addWidget(self.card_input)
-        card_layout.addStretch()
-        input_layout.addLayout(card_layout)
-
-        # Добавляем отступ между полями
-        input_layout.addSpacing(20)
-
-        # Поле для остатка
-        balance_layout = QHBoxLayout()
-        self.balance_label = QLabel()
-        self.balance_label.setFixedWidth(120)
-        self.balance_label.setAlignment(Qt.AlignmentFlag.AlignRight)
-        self.balance_input = QLineEdit()
-        self.balance_input.setFixedSize(200, 30)
-        balance_layout.addWidget(self.balance_label)
-        balance_layout.addWidget(self.balance_input)
-        balance_layout.addStretch()
-        input_layout.addLayout(balance_layout)
-
-        # Добавляем отступ перед кнопкой
-        input_layout.addSpacing(40)
-
-        # Кнопка подтверждения по центру
-        button_layout = QHBoxLayout()
-        button_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.confirm_button = QPushButton()
-        self.confirm_button.setFixedSize(150, 40)
-        self.confirm_button.clicked.connect(self.confirm_shift_end)
-        button_layout.addWidget(self.confirm_button)
-        input_layout.addLayout(button_layout)
-
-        self.input_group.setLayout(input_layout)
-
-        # Центрируем группу в основном layout
-        group_layout = QHBoxLayout()
-        group_layout.addStretch()
-        group_layout.addWidget(self.input_group)
-        group_layout.addStretch()
-
-        main_layout.addLayout(group_layout)
-
-        self.retranslate_ui()
-
-    def retranslate_ui(self):
-        tr = self.translator.tr
-        self.setWindowTitle(f"{tr('app_title')} - {tr('shift_report')}")
-        self.manager_menu.setTitle(tr("manager"))
-        self.back_action.setText(tr("back"))
-        self.title_label.setText(tr("shift_end_title"))
-        self.input_group.setTitle(tr("enter_amounts"))
-        self.cash_label.setText(tr("cash"))
-        self.cash_input.setPlaceholderText(tr("enter_amounts"))
-        self.card_label.setText(tr("card"))
-        self.card_input.setPlaceholderText(tr("enter_amounts"))
-        self.balance_label.setText(tr("balance"))
-        self.balance_input.setPlaceholderText(tr("enter_amounts"))
-        self.confirm_button.setText(tr("confirm"))
-
-    def confirm_shift_end(self):
-        cash = self.cash_input.text()
-        card = self.card_input.text()
-        balance = self.balance_input.text()
-        tr = self.translator.tr
-
-        # Проверка, что все поля заполнены
-        if not cash or not card or not balance:
-            QMessageBox.warning(self, tr("error"), tr("please_fill_all"))
-            return
-
-        # Проверка, что введены числа
-        try:
-            cash_value = float(cash)
-            card_value = float(card)
-            balance_value = float(balance)
-        except ValueError:
-            QMessageBox.warning(self, tr("error"), tr("enter_valid_numbers"))
-            return
-
-        # Проверка на положительные значения
-        if cash_value <= 0 or card_value <= 0 or balance_value <= 0:
-            QMessageBox.warning(self, tr("error"), tr("values_positive"))
-            return
-
-        # Здесь можно добавить логику обработки данных
-        QMessageBox.information(self, tr("shift_completed"),
-                                f"{tr('shift_completed')}!\n"
-                                f"{tr('cash_amount')}: {cash_value:.2f}\n"
-                                f"{tr('card_amount')}: {card_value:.2f}\n"
-                                f"{tr('balance_amount')}: {balance_value:.2f}")
-
-    def open_main_window(self):
-        self.main_window = MainWindow(self.translator)
-        self.main_window.show()
-        self.close()
+    def show_maximized(self):
+        self.show()
+        self.showMaximized()
 
 
-class Settings(BaseWindow):
-    def __init__(self, translator):
-        super().__init__(translator)
+class Settings(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("ANK Software")
 
-        self.setFixedSize(1920, 1080)
         self.settings = QSettings("ANK Software")
         self.current_theme = self.settings.value("theme", "light")
-        self.apply_theme(self.current_theme)
+        self.current_style = self.settings.value("style", "Windows")
+
+        self.apply_theme_and_style(self.current_theme, self.current_style)
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
 
         main_layout = QVBoxLayout(central_widget)
         main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        main_layout.setSpacing(20)
 
-        self.menu_bar = self.menuBar()
-        self.tools_menu = QMenu(self)
-        self.back_action = QAction(self)
-        self.back_action.triggered.connect(self.open_main_window)
-        self.tools_menu.addAction(self.back_action)
-        self.menu_bar.addMenu(self.tools_menu)
+        menu_bar = self.menuBar()
+        tools_menu = menu_bar.addMenu("Tools")
+        back_action = tools_menu.addAction("Back")
+        back_action.triggered.connect(self.open_main_window)
 
-        self.title_label = QLabel()
-        self.title_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        title_label = QLabel("Settings")
+        title_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         font = QFont()
         font.setPointSize(18)
-        self.title_label.setFont(font)
-        main_layout.addWidget(self.title_label)
+        title_label.setFont(font)
+        main_layout.addWidget(title_label)
 
-        # Группа для выбора языка
-        self.language_group = QGroupBox()
-        self.language_group.setFixedSize(300, 100)
-        language_layout = QVBoxLayout()
+        color_theme_label = QLabel("Light/Dark themes")
+        color_theme_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        font = QFont()
+        font.setPointSize(14)
+        color_theme_label.setFont(font)
+        main_layout.addWidget(color_theme_label)
 
-        self.language_label = QLabel()
-        self.language_combo = QComboBox()
-        self.language_combo.addItem("English", "en")
-        self.language_combo.addItem("Русский", "ru")
-
-        # Устанавливаем текущий язык
-        current_index = self.language_combo.findData(self.translator.current_language)
-        if current_index >= 0:
-            self.language_combo.setCurrentIndex(current_index)
-
-        self.language_combo.currentIndexChanged.connect(self.change_language)
-
-        language_layout.addWidget(self.language_label)
-        language_layout.addWidget(self.language_combo)
-        self.language_group.setLayout(language_layout)
-        main_layout.addWidget(self.language_group)
-
-        # Группа для темы
-        self.theme_group = QGroupBox()
-        self.theme_group.setFixedSize(300, 100)
+        theme_group = QGroupBox()
+        theme_group.setFixedSize(250, 80)
         theme_layout = QVBoxLayout()
 
-        self.light_theme_btn = QPushButton()
-        self.dark_theme_btn = QPushButton()
+        self.light_theme_btn = QPushButton("Light theme")
+        self.dark_theme_btn = QPushButton("Dark theme")
 
-        self.light_theme_btn.clicked.connect(lambda: self.change_theme("light"))
-        self.dark_theme_btn.clicked.connect(lambda: self.change_theme("dark"))
+        self.light_theme_btn.clicked.connect(lambda: self.change_color_theme("light"))
+        self.dark_theme_btn.clicked.connect(lambda: self.change_color_theme("dark"))
 
         theme_layout.addWidget(self.light_theme_btn)
-        self.light_theme_btn.setFixedSize(280, 30)
+        self.light_theme_btn.setFixedSize(225, 20)
         theme_layout.addWidget(self.dark_theme_btn)
-        self.dark_theme_btn.setFixedSize(280, 30)
-        self.theme_group.setLayout(theme_layout)
-        main_layout.addWidget(self.theme_group)
+        self.dark_theme_btn.setFixedSize(225, 20)
+        theme_group.setLayout(theme_layout)
 
-        self.retranslate_ui()
+        main_layout.addWidget(theme_group)
 
-    def change_language(self, index):
-        """Смена языка"""
-        if index >= 0:
-            lang_code = self.language_combo.itemData(index)
-            if lang_code and lang_code != self.translator.current_language:
-                print(f"Пытаемся сменить язык на: {lang_code}")
-                success = self.translator.load_language(lang_code)
-                if success:
-                    print("Язык успешно изменен!")
+        style_label = QLabel("Style themes")
+        style_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        font = QFont()
+        font.setPointSize(14)
+        style_label.setFont(font)
+        main_layout.addWidget(style_label)
 
-    def change_theme(self, theme):
+        self.style_combo = QComboBox()
+        self.style_combo.addItems(['Fusion', 'Windows'])
+        self.style_combo.setCurrentText(self.current_style)
+        self.style_combo.setFixedSize(250, 30)
+        main_layout.addWidget(self.style_combo)
+
+        self.apply_btn = QPushButton('Confirm Style')
+        self.apply_btn.setFixedSize(250, 25)
+        main_layout.addWidget(self.apply_btn)
+
+        self.apply_btn.clicked.connect(self.change_style)
+
+    def change_color_theme(self, theme):
         self.current_theme = theme
         self.settings.setValue("theme", theme)
-        self.apply_theme(theme)
+        self.apply_theme_and_style(theme, self.current_style)
 
-    def retranslate_ui(self):
-        tr = self.translator.tr
-        self.setWindowTitle(tr("app_title"))
-        self.tools_menu.setTitle(tr("tools"))
-        self.back_action.setText(tr("back"))
-        self.title_label.setText(tr("settings"))
-        self.theme_group.setTitle(tr("theme"))
-        self.language_group.setTitle(tr("language"))
-        self.light_theme_btn.setText(tr("light_theme"))
-        self.dark_theme_btn.setText(tr("dark_theme"))
-        self.language_label.setText(tr("language") + ":")
+    def change_style(self):
+        style = self.style_combo.currentText()
+        self.current_style = style
+        self.settings.setValue("style", style)
+        self.apply_theme_and_style(self.current_theme, style)
+
+    def apply_theme_and_style(self, theme, style):
+        app = QApplication.instance()
+
+        app.setStyle(style)
+
+        if theme == "dark":
+            dark_palette = QPalette()
+            dark_palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
+            dark_palette.setColor(QPalette.ColorRole.WindowText, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.Base, QColor(25, 25, 25))
+            dark_palette.setColor(QPalette.ColorRole.AlternateBase, QColor(53, 53, 53))
+            dark_palette.setColor(QPalette.ColorRole.ToolTipBase, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.ToolTipText, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.Text, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.Button, QColor(53, 53, 53))
+            dark_palette.setColor(QPalette.ColorRole.ButtonText, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.BrightText, Qt.GlobalColor.red)
+            dark_palette.setColor(QPalette.ColorRole.Link, QColor(42, 130, 218))
+            dark_palette.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
+            dark_palette.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.black)
+            app.setPalette(dark_palette)
+        else:
+            app.setPalette(app.style().standardPalette())
 
     def open_main_window(self):
-        self.main_window = MainWindow(self.translator)
-        self.main_window.show()
+        self.main_window = MainWindow()
+        self.main_window.show_maximized()
         self.close()
 
+    def show_maximized(self):
+        self.show()
+        self.showMaximized()
 
-# Функция для создания языковых файлов
-def create_language_files():
-    """Создает или перезаписывает языковые файлы"""
-    if os.path.exists('languages'):
-        shutil.rmtree('languages')
-    os.makedirs('languages')
 
-    languages = {
-        'en.txt': """app_title = ANK Software
-autorization = Autorization
-login = Login
-password = Password
-login_button = Login
-error = Error
-wrong_credentials = Wrong login, or password!
-manager = Manager
-shift_report = Shift report
-exit = Exit
-tools = Tools
-settings = Settings
-help = Help
-user_guide = User Guide
-about = About
-support = Support
-back = Back
-shift_end_title = End of Shift
-enter_amounts = Enter amounts
-cash = Cash:
-card = Card:
-balance = Balance:
-confirm = Confirm
-please_fill_all = Please fill all fields!
-enter_valid_numbers = Please enter valid numeric values!
-values_positive = Values must be positive and greater than zero!
-shift_completed = Shift completed!
-cash_amount = Cash
-card_amount = Card
-balance_amount = Balance
-light_theme = Light theme
-dark_theme = Dark theme
-language = Language
-theme = Theme""",
+class ShiftReport(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("ANK Software")
 
-        'ru.txt': """app_title = ANK Software
-autorization = Авторизация
-login = Логин
-password = Пароль
-login_button = Войти
-error = Ошибка
-wrong_credentials = Неправильный логин или пароль!
-manager = Менеджер
-shift_report = Отчет о смене
-exit = Выход
-tools = Инструменты
-settings = Настройки
-help = Помощь
-user_guide = Руководство пользователя
-about = О программе
-support = Поддержка
-back = Назад
-shift_end_title = Конец смены
-enter_amounts = Введите суммы
-cash = Наличные:
-card = Карта:
-balance = Остаток:
-confirm = Подтвердить
-please_fill_all = Пожалуйста, заполните все поля!
-enter_valid_numbers = Пожалуйста, введите корректные числовые значения!
-values_positive = Значения должны быть положительными и больше нуля!
-shift_completed = Смена завершена!
-cash_amount = Наличные
-card_amount = Карта
-balance_amount = Остаток
-light_theme = Светлая тема
-dark_theme = Темная тема
-language = Язык
-theme = Тема"""
-    }
+        self.settings = QSettings("ANK Software")
+        self.current_theme = self.settings.value("theme", "light")
+        self.current_style = self.settings.value("style", "Windows")
 
-    for filename, content in languages.items():
-        with open(f'languages/{filename}', 'w', encoding='utf-8') as f:
-            f.write(content)
-        print(f"Создан файл: languages/{filename}")
+        self.apply_theme_and_style(self.current_theme, self.current_style)
+
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+
+        main_layout = QVBoxLayout(central_widget)
+        main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        main_layout.addStretch(1)
+
+        self.label = QLabel("Report")
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        font = QFont()
+        font.setPointSize(20)
+        self.label.setFont(font)
+        main_layout.addWidget(self.label)
+
+        self.money = QLineEdit()
+        self.money.setFixedSize(350, 35)
+        self.money.setPlaceholderText("Cash")
+        money_validator = QDoubleValidator(0.0, 999999.99, 2, self)
+        money_validator.setNotation(QDoubleValidator.Notation.StandardNotation)
+        self.money.setValidator(money_validator)
+        main_layout.addWidget(self.money)
+
+        self.terminal = QLineEdit()
+        self.terminal.setFixedSize(350, 35)
+        self.terminal.setPlaceholderText("Receipt")
+        terminal_validator = QDoubleValidator(0.0, 999999.99, 2, self)
+        terminal_validator.setNotation(QDoubleValidator.Notation.StandardNotation)
+        self.terminal.setValidator(terminal_validator)
+        main_layout.addWidget(self.terminal)
+
+        self.remains = QLineEdit()
+        self.remains.setFixedSize(350, 35)
+        self.remains.setPlaceholderText("Remains")
+
+        remains_validator = QDoubleValidator(0.0, 999999.99, 2, self)
+        self.remains.setValidator(remains_validator)
+        main_layout.addWidget(self.remains)
+
+        self.end_shift = QPushButton("End shift")
+        self.end_shift.clicked.connect(self.validate_and_open_main_window)
+        main_layout.addWidget(self.end_shift)
+
+        main_layout.addStretch(1)
+
+    def validate_and_open_main_window(self):
+        if not self.money.text().strip():
+            QMessageBox.warning(self, "Error", "The cash field cannot be empty!")
+            self.money.setFocus()
+            return
+
+        if not self.terminal.text().strip():
+            QMessageBox.warning(self, "Error", "The receipt field cannot be empty!")
+            self.terminal.setFocus()
+            return
+
+        try:
+            cash_value = float(self.money.text())
+            receipt_value = float(self.terminal.text())
+        except ValueError:
+            QMessageBox.warning(self, "Error", "Only numbers can be entered in the cash and receipt fields!")
+            return
+
+        self.open_main_window()
+
+    def open_main_window(self):
+        self.save_shift_data()
+
+        self.main_window = MainWindow()
+        self.main_window.show_maximized()
+        self.close()
+
+    def save_shift_data(self):
+        cash = self.money.text()
+        receipt = self.terminal.text()
+        remains = self.remains.text() if self.remains.text().strip() else "0"
+
+        print(f"Данные смены: Cash={cash}, Receipt={receipt}, Remains={remains}")
+
+        self.settings.setValue("last_cash", cash)
+        self.settings.setValue("last_receipt", receipt)
+        self.settings.setValue("last_remains", remains)
+
+    def show_maximized(self):
+        self.show()
+        self.showMaximized()
+
+    def apply_theme_and_style(self, theme, style):
+        app = QApplication.instance()
+
+        app.setStyle(style)
+
+        if theme == "dark":
+            dark_palette = QPalette()
+            dark_palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
+            dark_palette.setColor(QPalette.ColorRole.WindowText, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.Base, QColor(25, 25, 25))
+            dark_palette.setColor(QPalette.ColorRole.AlternateBase, QColor(53, 53, 53))
+            dark_palette.setColor(QPalette.ColorRole.ToolTipBase, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.ToolTipText, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.Text, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.Button, QColor(53, 53, 53))
+            dark_palette.setColor(QPalette.ColorRole.ButtonText, Qt.GlobalColor.white)
+            dark_palette.setColor(QPalette.ColorRole.BrightText, Qt.GlobalColor.red)
+            dark_palette.setColor(QPalette.ColorRole.Link, QColor(42, 130, 218))
+            dark_palette.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
+            dark_palette.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.black)
+            app.setPalette(dark_palette)
+        else:
+            app.setPalette(app.style().standardPalette())
 
 
 if __name__ == "__main__":
-    # Создаем языковые файлы
-    create_language_files()
-
     app = QApplication(sys.argv)
-    app.setStyle('Fusion')
 
-    translator = SimpleTranslator()
-    window = Autorization(translator)
-    window.show()
-    window.showMaximized()
+settings = QSettings("ANK Software")
+initial_style = settings.value("style", "Fusion")
+app.setStyle(initial_style)
 
-    app.exec()
+window = Autorization()
+window.show()
+window.showMaximized()
+
+sys.exit(app.exec())
